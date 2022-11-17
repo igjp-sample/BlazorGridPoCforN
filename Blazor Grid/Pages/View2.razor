@@ -1,0 +1,95 @@
+@page "/view-2"
+@inject JpPeople.JpPeopleService jpPeopleService
+@inject IJSRuntime JS
+
+<div class="row-layout view-2-container">
+    <div class="column-layout group">
+		<div class="row-layout group_1">
+            <IgbButton Variant="@ButtonVariant.Contained" @onclick="onClkBtn1">行・セル情報を取得</IgbButton>
+		</div>
+        <IgbGrid 
+            Data="jpPeopleTable1" 
+            PrimaryKey="Id" 
+            RowSelection="GridSelectionMode.Multiple" 
+            CellSelection="GridSelectionMode.Multiple"
+            DisplayDensity="DisplayDensity.Cosy" 
+            RowEditable="true" 
+            Moving="true" 
+            AllowFiltering="true" 
+            FilterMode="FilterMode.ExcelStyleFilter"
+            AllowAdvancedFiltering="true"
+            AutoGenerate="false"
+            RowSelectionChanging="onRowSelectionChanging"
+            RowSelectionChangingScript="rowSelectionChangingHandler"
+            RangeSelected="onRangeSelected"
+            class="ig-typography grid"
+            Id="grid"
+            view-2-scope
+            @ref="grid"
+            Name="grid">
+            <IgbGridToolbar>
+                <IgbGridToolbarActions>
+                    <IgbGridToolbarAdvancedFiltering></IgbGridToolbarAdvancedFiltering>
+                    <IgbGridToolbarPinning></IgbGridToolbarPinning>
+                    <IgbGridToolbarHiding></IgbGridToolbarHiding>
+                    <IgbGridToolbarExporter></IgbGridToolbarExporter>
+                </IgbGridToolbarActions>
+                <IgbGridToolbarTitle>Grid Toolbar</IgbGridToolbarTitle>
+            </IgbGridToolbar>
+            <IgbColumn Hidden="true" Field="Id" DataType="GridColumnDataType.Number" Header="id" Sortable="true" Resizable="true"></IgbColumn>
+            <IgbColumnGroup Header="名前">
+                <IgbColumn Field="Lastname" DataType="GridColumnDataType.String" Header="姓" Sortable="true" Resizable="true"></IgbColumn>
+                <IgbColumn Field="Firstname" DataType="GridColumnDataType.String" Header="名" Sortable="true" Resizable="true"></IgbColumn>
+            </IgbColumnGroup>
+            <IgbColumnGroup Header="連絡先">
+                <IgbColumn Field="Mobile" DataType="GridColumnDataType.String" Header="電話番号" Sortable="true" Resizable="true"></IgbColumn>
+                <IgbColumn CellClassesScript="emailCellClassesHandler" Field="Email" DataType="GridColumnDataType.String" Header="email" Sortable="true" Resizable="true"></IgbColumn>
+            </IgbColumnGroup>
+            <IgbColumn Field="Zip" DataType="GridColumnDataType.String" Header="郵便番号" Sortable="true" Resizable="true"></IgbColumn>
+            <IgbColumn Field="Address" DataType="GridColumnDataType.String" Header="都道府県" Sortable="true" Resizable="true"></IgbColumn>
+            <IgbColumn Field="Gender" DataType="GridColumnDataType.String" Header="性別" Sortable="true" Resizable="true">
+                <InlineEditorTemplate>
+                    <select>
+                        <option value="">選択してください</option>
+                        <option value="1">男性</option>
+                        <option value="2">女性</option>
+                    </select>
+                </InlineEditorTemplate>
+            </IgbColumn>
+            <IgbColumn Field="Birthday" DataType="GridColumnDataType.Date" Header="生年月日" Sortable="true" Resizable="true"></IgbColumn>
+            <IgbColumn Field="Bloodtype" DataType="GridColumnDataType.String" Header="血液型" Sortable="true" Resizable="true"></IgbColumn>
+        </IgbGrid>
+    </div>
+</div>
+
+@code {
+    private JpPeople.Table1Type[] jpPeopleTable1 = Array.Empty<JpPeople.Table1Type>();
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Delay(1);
+        jpPeopleTable1 = await this.jpPeopleService.GetTable1() ?? jpPeopleTable1;
+
+        //選択状態とする行のIDを指定して選択
+        object[] rowIDs = new object[2];
+        rowIDs[0] = "1";
+        rowIDs[1] = "3";
+        this.grid?.SelectRows(rowIDs, true);
+    }
+    public IgbGrid? grid;
+    public void onClkBtn1() {
+        //object rowKey = new object("id3");
+        var rowData = this.grid?.GetRowByKey("3").Data;
+        var cellData = this.grid?.GetCellByColumnVisibleIndex(0, 5).Value;
+        Console.WriteLine("data found");
+    }
+    public void onRowSelectionChanging(IgbRowSelectionEventArgs args) {
+        //選択した行のプライマリキー（ID）をコンソールに出力します。
+        Console.WriteLine(string.Join(", ", Array.ConvertAll(args.Detail.NewSelection, x => x.ToString())));
+    }
+    public void onRangeSelected(IgbGridSelectionRangeEventArgs args) {
+        //選択した範囲の開始セルおよび終了セル情報をコンソールに出力します。
+        string logtext = $"RowStart {args.Detail.RowStart}, RowEnd {args.Detail.RowEnd}, ColStart {args.Detail.ColumnStart}, ColEnd {args.Detail.ColumnEnd}";
+        Console.WriteLine(logtext);
+        //Console.WriteLine(this.grid.GetCellByColumnVisibleIndex(args.Detail.RowStart, double.Parse(args.Detail.ColumnStart)));
+    }
+}
